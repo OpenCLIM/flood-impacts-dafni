@@ -1,0 +1,21 @@
+kind: Model
+apiVersion: v1alpha3
+metadata:
+  displayName: CityCAT Impacts v1
+  type: Modelling
+  name: citycat-impacts
+  summary: Assess flood impacts using CityCAT results
+  description: Calculates maximum depths at each building
+spec:
+  inputs:
+
+    datasets:
+      - uid: 18a0752f-bf6d-4a9b-9b84-5e032bd3813e
+        versionUid: 2f46e6b6-733e-4d4b-8eb0-1251ee66feec
+        path: inputs/mastermap
+
+  outputs:
+    datasets:
+      - name: outputs/building-depths.gpkg
+        type: GeoPackage
+        desc: Building depths
