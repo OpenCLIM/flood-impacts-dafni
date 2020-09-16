@@ -6,7 +6,7 @@ from rasterio.transform import Affine
 from rasterstats import zonal_stats as zs
 import rasterio as rio
 
-data = pd.read_csv('/data/inputs/citycat/R1C1_SurfaceMaps/R1_C1_max_depth.csv')
+data = pd.read_csv('/data/inputs/run/R1C1_SurfaceMaps/R1_C1_max_depth.csv')
 
 # GDAL XYZ driver not working so creating raster manually
 unique_x, x_inverse = np.unique(data['XCen'].values, return_inverse=True)
