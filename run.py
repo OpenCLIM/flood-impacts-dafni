@@ -7,12 +7,15 @@ from rasterstats import zonal_stats as zs
 import rasterio as rio
 import os
 
+# Define paths
 data_path = '/data'
 inputs_path = os.path.join(data_path, 'inputs')
 outputs_path = os.path.join(data_path, 'outputs')
 
+# Read CityCAT results
 data = pd.read_csv(os.path.join(inputs_path, 'run/R1C1_SurfaceMaps/R1_C1_max_depth.csv'))
 
+# Convert CityCAT results to GeoTIFF
 # GDAL XYZ driver does not represent missing data properly so converting manually
 unique_x, x_inverse = np.unique(data.XCen.values, return_inverse=True)
 unique_y, y_inverse = np.unique(data.YCen.values, return_inverse=True)
@@ -38,10 +41,13 @@ with MemoryFile() as f:
         dst.write(depth, 1)
 
     with f.open() as src:
+        # Read buildings data
         buildings = gpd.read_file(os.path.join(inputs_path, 'mastermap/mastermap-topo_3629050_0.gpkg'), bbox=src.bounds,
                                   layer='TopographicArea')
 
+        # Extract maximum depths for each building from CityCAT results
         buildings['depth'] = [row['max'] for row in zs(buildings, src.read(1), affine=src.transform, stats=['max'],
                                                        all_touched=True, nodata=nodata)]
 
+        # Save a copy of buildings data with a new depth field
         buildings.to_file(os.path.join(outputs_path, 'building-depths.gpkg'), driver='GPKG')
