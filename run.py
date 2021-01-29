@@ -1,53 +1,45 @@
 import pandas as pd
-from rasterio import MemoryFile
 import geopandas as gpd
-import numpy as np
-from rasterio.transform import Affine
 from rasterstats import zonal_stats as zs
 import rasterio as rio
 import os
 
 # Define paths
-data_path = '/data'
+data_path = os.getenv('DATA_PATH', '/data')
 inputs_path = os.path.join(data_path, 'inputs')
 outputs_path = os.path.join(data_path, 'outputs')
+mastermap = os.path.join(inputs_path, 'mastermap/mastermap-topo_3889921.gpkg')
+area_layer = 'Topographicarea'
+line_layer = 'Topographicline'
+output_file = os.path.join(outputs_path, 'depths.gpkg')
 
-# Read CityCAT results
-data = pd.read_csv(os.path.join(inputs_path, 'run/R1C1_SurfaceMaps/R1_C1_max_depth.csv'))
+threshold = os.getenv('THRESHOLD', 0.01)
 
-# Convert CityCAT results to GeoTIFF
-# GDAL XYZ driver does not represent missing data properly so converting manually
-unique_x, x_inverse = np.unique(data.XCen.values, return_inverse=True)
-unique_y, y_inverse = np.unique(data.YCen.values, return_inverse=True)
-x_size, y_size = len(unique_x), len(unique_y)
-y_inverse = y_size - y_inverse - 1
-nodata = -9999
-depth = np.full((y_size, x_size), nodata, dtype=float)
-depth[y_inverse, x_inverse] = data.Depth.values
-res = unique_x[1] - unique_x[0]
+buffer = 5
 
-with MemoryFile() as f:
-    with rio.open(
-        f,
-        'w',
-        driver='GTiff',
-        height=y_size,
-        width=x_size,
-        count=1,
-        dtype=depth.dtype,
-        transform=Affine.translation(data.XCen.min(), data.YCen.max()) * Affine.scale(res, -res),
-        nodata=nodata
-    ) as dst:
-        dst.write(depth, 1)
+with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as src:
+    # Read buildings data
 
-    with f.open() as src:
-        # Read buildings data
-        buildings = gpd.read_file(os.path.join(inputs_path, 'mastermap/mastermap-topo_3629050_0.gpkg'), bbox=src.bounds,
-                                  layer='TopographicArea')
+    areas = gpd.read_file(mastermap, bbox=src.bounds, layer=area_layer).rename(columns={'fid': 'toid'})
+    lines = gpd.read_file(mastermap, bbox=src.bounds, layer=line_layer).rename(columns={'fid': 'toid'})
+    depth = src.read(1)
 
-        # Extract maximum depths for each building from CityCAT results
-        buildings['depth'] = [row['max'] for row in zs(buildings, src.read(1), affine=src.transform, stats=['max'],
-                                                       all_touched=True, nodata=nodata)]
+    # Extract maximum depths for each building from CityCAT results
+    areas['depth'] = [row['max'] for row in zs(areas.buffer(buffer), depth, affine=src.transform, stats=['max'],
+                                               all_touched=True, nodata=src.nodata)]
 
-        # Save a copy of buildings data with a new depth field
-        buildings.to_file(os.path.join(outputs_path, 'building-depths.gpkg'), driver='GPKG')
+    lines['depth'] = [row['max'] for row in zs(lines.buffer(buffer), depth, affine=src.transform, stats=['max'],
+                                               all_touched=True, nodata=src.nodata)]
+
+    areas = areas[areas.depth >= threshold]
+    lines = lines[lines.depth >= threshold]
+
+    # Save a copy of buildings data with a new depth field
+    if len(areas) > 0:
+        areas.to_file(output_file, layer=area_layer, driver='GPKG')
+    if len(lines) > 0:
+        lines.to_file(output_file, layer=line_layer, driver='GPKG')
+
+    df = pd.concat([areas, lines])
+    df.to_csv(os.path.join(outputs_path, 'depths.csv'), index=False)
+    df.featurecode.value_counts().to_csv(os.path.join(outputs_path, 'counts.csv'))
