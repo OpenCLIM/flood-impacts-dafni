@@ -1,11 +1,11 @@
 kind: Model
-apiVersion: v1alpha3
+apiVersion: v1alpha4
 metadata:
-  displayName: CityCAT Impacts v2
+  displayName: Flood Impacts (OpenCLIM)
   type: Modelling
-  name: citycat-impacts
-  summary: Assess flood impacts using CityCAT results
-  description: Calculates maximum depths at each building
+  name: flood-impacts
+  summary: Assess flood impacts using OS MasterMap
+  description: Calculates area depths and line inundated distances
 spec:
   inputs:
     env:
@@ -17,13 +17,25 @@ spec:
         min: 0
         max: 1
 
-    datasets:
-      - uid: 18a0752f-bf6d-4a9b-9b84-5e032bd3813e
-        versionUid: 2f46e6b6-733e-4d4b-8eb0-1251ee66feec
+    dataslots:
+      - name: MasterMap
+        description: OS MasterMap
+        default:
+          - uid: bf346708-bf48-4f24-9c4c-48f715786765
+            versionUid: 252d4e7a-ea01-42e9-8d9d-6fd8e75b139b
         path: inputs/mastermap
+        required: true
 
   outputs:
     datasets:
-      - name: outputs/building-depths.gpkg
+      - name: outputs/features.gpkg
         type: GeoPackage
-        desc: Building depths
+        desc: Areas and line segments with depths above threshold
+
+      - name: outputs/counts.csv
+        type: CSV
+        desc: Number of areas inundated above the threshold for each featurecode
+
+      - name: outputs/distance.csv
+        type: CSV
+        desc: The distance of lines inundated above the threshold for each featurecode
