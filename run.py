@@ -18,7 +18,7 @@ area_layer = 'Topographicarea'
 line_layer = 'Topographicline'
 output_file = os.path.join(outputs_path, 'features.gpkg')
 
-threshold = os.getenv('THRESHOLD', 0.01)
+threshold = float(os.getenv('THRESHOLD'))
 
 buffer = 5
 
