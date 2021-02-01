@@ -11,6 +11,8 @@ import glob
 data_path = os.getenv('DATA_PATH', '/data')
 inputs_path = os.path.join(data_path, 'inputs')
 outputs_path = os.path.join(data_path, 'outputs')
+if not os.path.exists(outputs_path):
+    os.mkdir(outputs_path)
 mastermap = glob.glob(os.path.join(inputs_path, 'mastermap', '*.gpkg'))[0]
 area_layer = 'Topographicarea'
 line_layer = 'Topographicline'
