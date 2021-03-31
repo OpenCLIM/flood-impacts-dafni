@@ -14,6 +14,7 @@ outputs_path = os.path.join(data_path, 'outputs')
 if not os.path.exists(outputs_path):
     os.mkdir(outputs_path)
 mastermap = glob.glob(os.path.join(inputs_path, 'mastermap', '*.gpkg'))[0]
+udm_buildings = os.path.join(inputs_path, 'buildings', 'urban_fabric.gpkg')
 area_layer = 'Topographicarea'
 line_layer = 'Topographicline'
 output_file = os.path.join(outputs_path, 'features.gpkg')
@@ -26,6 +27,10 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as src:
     # Read MasterMap data
     areas = gpd.read_file(mastermap, bbox=src.bounds, layer=area_layer).rename(columns={'fid': 'toid'})
     lines = gpd.read_file(mastermap, bbox=src.bounds, layer=line_layer).rename(columns={'fid': 'toid'})
+    if os.path.exists(udm_buildings):
+        udm_buildings = gpd.read_file(udm_buildings)
+        udm_buildings['featurecode'] = 20000
+        areas = areas.append(udm_buildings)
 
     # Read flood depths
     depth = src.read(1)
