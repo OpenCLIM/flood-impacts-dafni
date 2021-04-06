@@ -28,7 +28,7 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as src:
     areas = gpd.read_file(mastermap, bbox=src.bounds, layer=area_layer).rename(columns={'fid': 'toid'})
     lines = gpd.read_file(mastermap, bbox=src.bounds, layer=line_layer).rename(columns={'fid': 'toid'})
     if os.path.exists(udm_buildings):
-        udm_buildings = gpd.read_file(udm_buildings)
+        udm_buildings = gpd.read_file(udm_buildings, bbox=src.bounds)
         udm_buildings['featurecode'] = 20000
         areas = areas.append(udm_buildings)
 
