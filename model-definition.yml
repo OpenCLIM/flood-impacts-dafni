@@ -13,7 +13,7 @@ spec:
         title: Threshold depth (m)
         desc: Minimum depth of features to include in output
         type: number
-        default: 0.01
+        default: 0.3
         min: 0
         max: 1
 
@@ -32,10 +32,6 @@ spec:
         type: GeoPackage
         desc: Areas and line segments with depths above threshold
 
-      - name: outputs/counts.csv
+      - name: outputs/buildings.csv
         type: CSV
-        desc: Number of areas inundated above the threshold for each featurecode
-
-      - name: outputs/distance.csv
-        type: CSV
-        desc: The distance of lines inundated above the threshold for each featurecode
+        desc: Maximum depths and velocity depth products of flooded buildings

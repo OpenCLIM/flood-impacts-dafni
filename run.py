@@ -15,49 +15,40 @@ if not os.path.exists(outputs_path):
     os.mkdir(outputs_path)
 mastermap = glob.glob(os.path.join(inputs_path, 'mastermap', '*.gpkg'))[0]
 udm_buildings = os.path.join(inputs_path, 'buildings', 'urban_fabric.gpkg')
-area_layer = 'Topographicarea'
-line_layer = 'Topographicline'
 output_file = os.path.join(outputs_path, 'features.gpkg')
 
 threshold = float(os.getenv('THRESHOLD'))
 
 buffer = 5
 
-with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as src:
+with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
+        rio.open(os.path.join(inputs_path, 'run/max_vd_product.tif')) as max_vd_product:
     # Read MasterMap data
-    areas = gpd.read_file(mastermap, bbox=src.bounds, layer=area_layer).rename(columns={'fid': 'toid'})
-    lines = gpd.read_file(mastermap, bbox=src.bounds, layer=line_layer).rename(columns={'fid': 'toid'})
+    buildings = gpd.read_file(mastermap, bbox=max_depth.bounds)
     if os.path.exists(udm_buildings):
-        udm_buildings = gpd.read_file(udm_buildings, bbox=src.bounds)
-        udm_buildings['featurecode'] = 20000
-        areas = areas.append(udm_buildings)
+        udm_buildings = gpd.read_file(udm_buildings, bbox=max_depth.bounds)
+        udm_buildings['toid'] = 'udm' + udm_buildings.index.astype(str)
+        buildings = buildings.append(udm_buildings)
 
-    # Read flood depths
-    depth = src.read(1)
+    # Read flood depths and vd_product
+    depth = max_depth.read(1)
+    vd_product = max_vd_product.read(1)
 
-    # Extract maximum depths for each building
-    areas['depth'] = [row['max'] for row in zs(areas.buffer(buffer), depth, affine=src.transform, stats=['max'],
-                                               all_touched=True, nodata=src.nodata)]
 
-    # Find areas flooded above threshold
+    # Extract maximum depth and vd_product for each building
+    buildings['depth'] = [row['max'] for row in zs(buildings.buffer(buffer), depth, affine=max_depth.transform, stats=['max'],
+                                                   all_touched=True, nodata=max_depth.nodata)]
+
+    buildings['vd_product'] = [row['max'] for row in zs(buildings.buffer(buffer), vd_product, affine=max_vd_product.transform, stats=['max'],
+                                                        all_touched=True, nodata=max_vd_product.nodata)]
+
+    # Find flooded areas
     flooded_areas = gpd.GeoDataFrame(
         geometry=[shape(s[0]) for s in features.shapes(
-            np.ones(depth.shape, dtype=rio.uint8), mask=depth >= threshold, transform=src.transform)], crs=src.crs)
+            np.ones(depth.shape, dtype=rio.uint8), mask=depth >= threshold, transform=max_depth.transform)], crs=max_depth.crs)
 
-    # Filter areas and intersect lines
-    areas = areas[areas.depth >= threshold]
-    lines = gpd.overlay(lines, flooded_areas)
+    # Filter buildings
+    buildings = buildings[buildings.depth >= threshold]
 
-    # Save a copy of lines and areas to the GeoPackage
-    if len(areas) > 0:
-        areas.to_file(output_file, layer=area_layer, driver='GPKG')
-    if len(lines) > 0:
-        lines.to_file(output_file, layer=line_layer, driver='GPKG')
-
-    # Count the number of areas by featurecode and save to CSV
-    areas.featurecode.value_counts().rename_axis('featurecode').rename('count').to_csv(
-        os.path.join(outputs_path, 'counts.csv'))
-
-    # Count the total inundated distances by featurecode and save to CSV
-    lines.geometry.length.groupby(lines.featurecode).sum().round(2).rename('distance (m)').to_csv(
-        os.path.join(outputs_path, 'distance.csv'))
+    # Count the number of buildings by featurecode and save to CSV
+    buildings[['toid', 'depth',  'vd_product']].to_csv(os.path.join(outputs_path, 'buildings.csv'), index=False)
