@@ -3,10 +3,11 @@
 [![build](https://github.com/OpenCLIM/flood-impacts-dafni/workflows/build/badge.svg)](https://github.com/OpenCLIM/flood-impacts-dafni/actions)
 
 ## Features
-- [Read polygons and lines from OS MasterMap](#mastermap)
-- [Read polygons from UDM urban fabric](#udm)
-- [Calculate depths at polygons](#depth)
-- [Create a CSVs of maximum building depth and depth velocity product](#csv)
+- [Read buildings from OS MasterMap](#mastermap)
+- [Read buildings from UDM urban fabric](#udm)
+- [Select buildings intersecting flood extent](#filter)
+- [Calculate maximum depth and depth-velocity product](#depth)
+- [Calculate length of flooded perimeter](#perimeter)
 
 ## Parameters
 The following parameters must be provided as environment variables (in uppercase and with spaces replaced by underscores). 
@@ -22,20 +23,27 @@ Data is made available to the model at the following paths. The spatial projecti
 ## Usage 
 `docker build -t flood-impacts-dafni . && docker run -v "data:/data" --env PYTHONUNBUFFERED=1 --env THRESHOLD=0.1 --name flood-impacts-dafni flood-impacts-dafni `
 
-## <a name="mastermap">Read polygons OS MasterMap</a>
+## <a name="mastermap">Read buildings from OS MasterMap</a>
 The data contained in a single GPKG file in the `MasterMap` dataslot is read using GeoPandas.
 If more than one file is provided then only the first file alphabetically will be used.
 
-## <a name="udm">Read polygons from UDM urban fabric</a>
-If the file `inputs/buildings/urban_fabric.gpkg` exists, its features are appended to those in the `Topographicarea` 
-MasterMap layer. The urban fabric features are assumed to be polygons and are assigned OIDs of `udm` followed by their
-index position in the dataset.
+## <a name="udm">Read buildings from UDM urban fabric</a>
+If the file `inputs/buildings/urban_fabric.gpkg` exists, its features are appended to those in the MasterMap layer. 
+The urban fabric features are assumed to be polygons and are assigned OIDs of `udm` followed by their index position in 
+the dataset.
 
-## <a name="depth">Calculate depths at polygons</a>
+## <a name="filter">Select buildings intersecting flood extent</a>
+Each building is buffered by 5m.
+Flooded areas are created as polygons where depths exceed the `THRESHOLD` using `rasterio.features.shapes`. These 
+flooded areas are then intersected with the buildings to identify buildings which are inundated over the `THRESHOLD`.
+
+## <a name="depth">Calculate maximum depth and depth-velocity product</a>
 The `zonal_stats` function from the `rasterstats` package is used to find the maximum intersecting flood depth and
-depth velocity product from the rasters at `inputs/run/max_depth.tif` and `inputs/run/max_cs_product.tif` within 5m of 
-each polygon in the `MasterMap` layer (optionally combined with the urban fabric)
+depth velocity product from the rasters at `inputs/run/max_depth.tif` and `inputs/run/max_vd_product.tif` within 5m of 
+each polygon in the `MasterMap` layer (optionally combined with the urban fabric).
 
-## <a name="csv">Create a CSVs of maximum building depth and depth velocity product</a>
-Buildings with a maximum depth below the `THRESHOLD` are removed.
-The values are then stored in the `buildings.csv` output file by building oid.
+## <a name="perimeter">Calculate length of flooded perimeter</a>
+The intersection of the buffered building polygon boundaries and the flooded areas is calculated using 
+`geopandas.overlay`. The length of these lines is the flooded perimeter.
+The flooded perimeter values are stored in the `buildings.csv` output file by building oid, along with maximum depth and 
+depth velocity product.
