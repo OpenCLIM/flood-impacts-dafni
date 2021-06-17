@@ -6,6 +6,7 @@ from rasterio import features
 import numpy as np
 from shapely.geometry import shape
 import glob
+import pandas as pd
 
 # Define paths
 data_path = os.getenv('DATA_PATH', '/data')
@@ -16,6 +17,7 @@ if not os.path.exists(outputs_path):
 mastermap = glob.glob(os.path.join(inputs_path, 'mastermap', '*.gpkg'))[0]
 udm_buildings = os.path.join(inputs_path, 'buildings', 'urban_fabric.gpkg')
 output_file = os.path.join(outputs_path, 'features.gpkg')
+uprn_lookup = glob.glob(os.path.join(inputs_path, 'uprn', '*.csv'))
 
 threshold = float(os.getenv('THRESHOLD'))
 
@@ -61,7 +63,15 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
                                                      crs=buildings.crs), flooded_areas)
     flooded_perimeter['flooded_perimeter'] = flooded_perimeter.geometry.length.round(2)
 
-    buildings = buildings.merge(flooded_perimeter, on='toid')[['toid', 'depth',  'vd_product', 'flooded_perimeter']]
+    buildings = buildings.merge(flooded_perimeter, on='toid')
+
+    # Lookup UPRN if available
+    if len(uprn_lookup) > 0:
+        uprn = pd.read_csv(uprn_lookup[0], usecols=['IDENTIFIER_1', 'IDENTIFIER_2']).rename(
+            columns={'IDENTIFIER_1': 'uprn', 'IDENTIFIER_2': 'toid'})
+
+        buildings = buildings.merge(uprn)
 
     # Save to CSV
-    buildings.to_csv(os.path.join(outputs_path, 'buildings.csv'), index=False)
+    buildings[['toid', 'uprn', 'depth',  'vd_product', 'flooded_perimeter']].to_csv(
+        os.path.join(outputs_path, 'buildings.csv'), index=False)

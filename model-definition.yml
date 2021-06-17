@@ -26,6 +26,15 @@ spec:
         path: inputs/mastermap
         required: true
 
+      - name: UPRN
+        description: Lookup between TOID and UPRN identifiers (CSV)
+        default:
+          - uid: d6f74a03-1983-43df-8232-d3172e38fecf
+            versionUid: 9c1fbe4d-c322-465d-9c9f-6d34da30e8a6
+        path: inputs/uprn
+        required: false
+
+
   outputs:
     datasets:
       - name: outputs/features.gpkg

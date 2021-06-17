@@ -8,6 +8,7 @@
 - [Select buildings intersecting flood extent](#filter)
 - [Calculate maximum depth and depth-velocity product](#depth)
 - [Calculate length of flooded perimeter](#perimeter)
+- [Lookup UPRNs for each TOID](#uprn)
 
 ## Parameters
 The following parameters must be provided as environment variables (in uppercase and with spaces replaced by underscores). 
@@ -19,6 +20,7 @@ Data is made available to the model at the following paths. The spatial projecti
 - inputs/MasterMap
 - inputs/buildings/urban_fabric.gpkg
 - inputs/run/max_depth.tif
+- inputs/uprn
 
 ## Usage 
 `docker build -t flood-impacts-dafni . && docker run -v "data:/data" --env PYTHONUNBUFFERED=1 --env THRESHOLD=0.1 --name flood-impacts-dafni flood-impacts-dafni `
@@ -45,5 +47,10 @@ each polygon in the `MasterMap` layer (optionally combined with the urban fabric
 ## <a name="perimeter">Calculate length of flooded perimeter</a>
 The intersection of the buffered building polygon boundaries and the flooded areas is calculated using 
 `geopandas.overlay`. The length of these lines is the flooded perimeter.
-The flooded perimeter values are stored in the `buildings.csv` output file by building oid, along with maximum depth and 
-depth velocity product.
+
+## <a name="uprn">Lookup UPRNs for each TOID</a>
+If a file is provided in the `UPRN` dataslot, this is used to lookup the Unique Property Reference Numbers (UPRNs) for
+each building. Each building may have more than one UPRN and therefore more than one row in the output CSV.
+
+The maximum depth, maximum depth velocity product and flooded perimeter values are stored in the `buildings.csv` output 
+file by building oid and uprn (if provided).
