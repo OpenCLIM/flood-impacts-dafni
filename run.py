@@ -73,5 +73,5 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
         buildings = buildings.merge(uprn)
 
     # Save to CSV
-    buildings[['toid', 'uprn', 'depth',  'vd_product', 'flooded_perimeter']].to_csv(
+    buildings[['toid', *['uprn' for _ in uprn_lookup[:1]], 'depth',  'vd_product', 'flooded_perimeter']].to_csv(
         os.path.join(outputs_path, 'buildings.csv'), index=False)
