@@ -36,6 +36,7 @@ spec:
 
 
   outputs:
+    datasets:
       - name: outputs/buildings.csv
         type: CSV
         desc: Maximum depths & velocity depth products and flooded perimeters of flooded buildings
