@@ -36,11 +36,6 @@ spec:
 
 
   outputs:
-    datasets:
-      - name: outputs/features.gpkg
-        type: GeoPackage
-        desc: Areas and line segments with depths above threshold
-
       - name: outputs/buildings.csv
         type: CSV
-        desc: Maximum depths and velocity depth products of flooded buildings
+        desc: Maximum depths & velocity depth products and flooded perimeters of flooded buildings
