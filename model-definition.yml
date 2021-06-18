@@ -5,7 +5,7 @@ metadata:
   type: Modelling
   name: flood-impacts
   summary: Assess flood impacts using OS MasterMap
-  description: Calculates area depths and line inundated distances
+  description: Calculates maximum depths, velocity depth products and flooded perimeters of flooded buildings
 spec:
   inputs:
     env:
@@ -19,10 +19,10 @@ spec:
 
     dataslots:
       - name: MasterMap
-        description: OS MasterMap
+        description: OS MasterMap buildings geopackage. Must contain a 'toid' attribute.
         default:
-          - uid: bf346708-bf48-4f24-9c4c-48f715786765
-            versionUid: 252d4e7a-ea01-42e9-8d9d-6fd8e75b139b
+          - uid: 1642d68f-f4ea-494d-b3fe-f27125f11757
+            versionUid: 8fadd93c-a8aa-41d2-8adb-5d615db89b3c
         path: inputs/mastermap
         required: true
 
