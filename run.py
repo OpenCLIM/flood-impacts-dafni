@@ -49,6 +49,11 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
     # Filter buildings
     buildings = buildings[buildings.intersects(flooded_areas.unary_union)]
 
+    if len(buildings) == 0:
+        with open(os.path.join(outputs_path, 'buildings.csv'), 'w') as f:
+            f.write('')
+        exit(0)
+
     # Extract maximum depth and vd_product for each building
     buildings['depth'] = [row['max'] for row in
                           zs(buildings, depth, affine=max_depth.transform, stats=['max'],
