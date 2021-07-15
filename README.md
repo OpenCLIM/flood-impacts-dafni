@@ -7,6 +7,7 @@
 - [Read buildings from UDM urban fabric](#udm)
 - [Select buildings intersecting flood extent](#filter)
 - [Calculate maximum depth and depth-velocity product](#depth)
+- [Calculate damages](#damages)
 - [Calculate length of flooded perimeter](#perimeter)
 - [Lookup UPRNs for each TOID](#uprn)
 
@@ -45,7 +46,7 @@ The `zonal_stats` function from the `rasterstats` package is used to find the ma
 depth velocity product from the rasters at `inputs/run/max_depth.tif` and `inputs/run/max_vd_product.tif` within 5m of 
 each polygon in the `MasterMap` layer (optionally combined with the urban fabric).
 
-## <a name="perimeter">Calculate damages</a>
+## <a name="damages">Calculate damages</a>
 Depths at each building are converted into a damage (£) using the CSV files in the `dd-curves` dataslot. Buildings with
 a MISTRAL `building_use` of residential are assigned damage values based on the `residential.csv` curve. All other buildings
 are assigned damaged values based on the `nonresidential.csv` file. Both CSV files are assumed to contain columns names
