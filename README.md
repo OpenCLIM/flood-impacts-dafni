@@ -21,6 +21,7 @@ Data is made available to the model at the following paths. The spatial projecti
 - inputs/buildings/urban_fabric.gpkg
 - inputs/run/max_depth.tif
 - inputs/uprn
+- inputs/dd-curves
 
 ## Usage 
 `docker build -t flood-impacts-dafni . && docker run -v "data:/data" --env PYTHONUNBUFFERED=1 --env THRESHOLD=0.1 --name flood-impacts-dafni flood-impacts-dafni `
@@ -43,6 +44,12 @@ flooded areas are then intersected with the buildings to identify buildings whic
 The `zonal_stats` function from the `rasterstats` package is used to find the maximum intersecting flood depth and
 depth velocity product from the rasters at `inputs/run/max_depth.tif` and `inputs/run/max_vd_product.tif` within 5m of 
 each polygon in the `MasterMap` layer (optionally combined with the urban fabric).
+
+## <a name="perimeter">Calculate damages</a>
+Depths at each building are converted into a damage (£) using the CSV files in the `dd-curves` dataslot. Buildings with
+a MISTRAL `building_use` of residential are assigned damage values based on the `residential.csv` curve. All other buildings
+are assigned damaged values based on the `nonresidential.csv` file. Both CSV files are assumed to contain columns names
+`depth` and `damage`, with depths in metres and damages in £/m<sup>2</sup>.
 
 ## <a name="perimeter">Calculate length of flooded perimeter</a>
 The intersection of the buffered building polygon boundaries and the flooded areas is calculated using 

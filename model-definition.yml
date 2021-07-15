@@ -34,6 +34,14 @@ spec:
         path: inputs/uprn
         required: false
 
+      - name: Depth/damage curves
+        description: CSV files named residential.csv and nonresidential.csv relating depth (m) to damage (£/m2)
+        default:
+          - uid: cd253bc2-0d72-4403-9fe2-34ada8fa628c
+            versionUid: d02980d6-a5d5-419f-a47f-dc9ae17517dd
+        path: inputs/dd-curves
+        required: true
+
 
   outputs:
     datasets:
