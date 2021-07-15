@@ -18,6 +18,7 @@ mastermap = glob.glob(os.path.join(inputs_path, 'mastermap', '*.gpkg'))[0]
 udm_buildings = os.path.join(inputs_path, 'buildings', 'urban_fabric.gpkg')
 output_file = os.path.join(outputs_path, 'features.gpkg')
 uprn_lookup = glob.glob(os.path.join(inputs_path, 'uprn', '*.csv'))
+dd_curves = os.path.join(inputs_path, 'dd-curves')
 
 threshold = float(os.getenv('THRESHOLD'))
 
@@ -43,6 +44,9 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
             np.ones(depth.shape, dtype=rio.uint8), mask=np.logical_and(depth >= threshold, max_depth.read_masks(1)),
             transform=max_depth.transform)], crs=max_depth.crs)
 
+    # Store original areas for damage calculation
+    buildings['original_area'] = buildings.area
+
     # Buffer buildings
     buildings['geometry'] = buildings.buffer(buffer)
 
@@ -63,6 +67,16 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
                                zs(buildings, vd_product, affine=max_vd_product.transform, stats=['max'],
                                   all_touched=True, nodata=max_vd_product.nodata)]
 
+    # Calculate damage
+    residential = pd.read_csv(os.path.join(dd_curves, 'residential.csv'))
+    nonresidential = pd.read_csv(os.path.join(dd_curves, 'nonresidential.csv'))
+
+    buildings['damage'] = (np.interp(
+        buildings.depth, residential.depth, residential.damage) * buildings.original_area).round(0)
+    buildings['damage'] = buildings['damage'].where(
+        buildings.building_use != 'residential', (np.interp(
+            buildings.depth, nonresidential.depth, nonresidential.damage) * buildings.original_area).round(0))
+
     # Get the flooded perimeter length for each building
     flooded_perimeter = gpd.overlay(gpd.GeoDataFrame({'toid': buildings.toid}, geometry=buildings.geometry.boundary,
                                                      crs=buildings.crs), flooded_areas)
@@ -78,5 +92,5 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
         buildings = buildings.merge(uprn)
 
     # Save to CSV
-    buildings[['toid', *['uprn' for _ in uprn_lookup[:1]], 'depth',  'vd_product', 'flooded_perimeter']].to_csv(
+    buildings[['toid', *['uprn' for _ in uprn_lookup[:1]], 'depth', 'damage', 'vd_product', 'flooded_perimeter']].to_csv(
         os.path.join(outputs_path, 'buildings.csv'), index=False)
