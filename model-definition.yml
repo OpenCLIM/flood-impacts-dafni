@@ -11,7 +11,7 @@ spec:
     env:
       - name: THRESHOLD
         title: Threshold depth (m)
-        desc: Minimum depth of features to include in output
+        desc: Depth to use when calculating flooded perimeter
         type: number
         default: 0.3
         min: 0
@@ -29,6 +29,7 @@ spec:
       - name: UPRN
         description: Lookup between TOID and UPRN identifiers (CSV)
         default:
+
           - uid: d6f74a03-1983-43df-8232-d3172e38fecf
             versionUid: 9c1fbe4d-c322-465d-9c9f-6d34da30e8a6
         path: inputs/uprn
@@ -39,6 +40,7 @@ spec:
         default:
           - uid: cd253bc2-0d72-4403-9fe2-34ada8fa628c
             versionUid: d02980d6-a5d5-419f-a47f-dc9ae17517dd
+
         path: inputs/dd-curves
         required: true
 

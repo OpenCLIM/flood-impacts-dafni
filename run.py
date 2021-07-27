@@ -75,14 +75,19 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
         buildings.depth, residential.depth, residential.damage) * buildings.original_area).round(0)
     buildings['damage'] = buildings['damage'].where(
         buildings.building_use != 'residential', (np.interp(
-            buildings.depth, nonresidential.depth, nonresidential.damage) * buildings.original_area).round(0))
+            buildings.depth, nonresidential.depth, nonresidential.damage
+        ) * buildings.original_area).round(0)).astype(int)
 
     # Get the flooded perimeter length for each building
     flooded_perimeter = gpd.overlay(gpd.GeoDataFrame({'toid': buildings.toid}, geometry=buildings.geometry.boundary,
                                                      crs=buildings.crs), flooded_areas)
     flooded_perimeter['flooded_perimeter'] = flooded_perimeter.geometry.length.round(2)
 
-    buildings = buildings.merge(flooded_perimeter, on='toid')
+    buildings['perimeter'] = buildings.geometry.length
+
+    buildings = buildings.merge(flooded_perimeter, on='toid', how='left')
+    buildings['flooded_perimeter'] = buildings.flooded_perimeter.divide(
+        buildings.perimeter).fillna(0).multiply(100).round(0).astype(int)
 
     # Lookup UPRN if available
     if len(uprn_lookup) > 0:

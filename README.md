@@ -5,7 +5,6 @@
 ## Features
 - [Read buildings from OS MasterMap](#mastermap)
 - [Read buildings from UDM urban fabric](#udm)
-- [Select buildings intersecting flood extent](#filter)
 - [Calculate maximum depth and depth-velocity product](#depth)
 - [Calculate damages](#damages)
 - [Calculate length of flooded perimeter](#perimeter)
@@ -36,11 +35,6 @@ If the file `inputs/buildings/urban_fabric.gpkg` exists, its features are append
 The urban fabric features are assumed to be polygons and are assigned OIDs of `udm` followed by their index position in 
 the dataset.
 
-## <a name="filter">Select buildings intersecting flood extent</a>
-Each building is buffered by 5m.
-Flooded areas are created as polygons where depths exceed the `THRESHOLD` using `rasterio.features.shapes`. These 
-flooded areas are then intersected with the buildings to identify buildings which are inundated over the `THRESHOLD`.
-
 ## <a name="depth">Calculate maximum depth and depth-velocity product</a>
 The `zonal_stats` function from the `rasterstats` package is used to find the maximum intersecting flood depth and
 depth velocity product from the rasters at `inputs/run/max_depth.tif` and `inputs/run/max_vd_product.tif` within 5m of 
@@ -53,8 +47,10 @@ are assigned damaged values based on the `nonresidential.csv` file. Both CSV fil
 `depth` and `damage`, with depths in metres and damages in £/m<sup>2</sup>.
 
 ## <a name="perimeter">Calculate length of flooded perimeter</a>
+Flooded areas are created as polygons where depths exceed the `THRESHOLD` using `rasterio.features.shapes`.
 The intersection of the buffered building polygon boundaries and the flooded areas is calculated using 
-`geopandas.overlay`. The length of these lines is the flooded perimeter.
+`geopandas.overlay`. The length of these lines is the flooded perimeter. This length is converted to a percentage of the
+total perimeter.
 
 ## <a name="uprn">Lookup UPRNs for each TOID</a>
 If a file is provided in the `UPRN` dataslot, this is used to lookup the Unique Property Reference Numbers (UPRNs) for
