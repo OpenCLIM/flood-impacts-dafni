@@ -56,7 +56,10 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
                              all_touched=True, nodata=max_depth.nodata)]
 
     # Filter buildings
-    buildings = buildings[buildings['depth'] > 0]
+    buildings = buildings[buildings['depth'] > threshold]
+
+    # Calculate depth above floor level
+    buildings['depth'] = buildings.depth - threshold
 
     if len(buildings) == 0:
         with open(os.path.join(outputs_path, 'buildings.csv'), 'w') as f:
@@ -98,4 +101,4 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
 
     # Save to CSV
     buildings[['toid', *['uprn' for _ in uprn_lookup[:1]], 'depth', 'damage', 'vd_product', 'flooded_perimeter']].to_csv(
-        os.path.join(outputs_path, 'buildings.csv'), index=False)
+        os.path.join(outputs_path, 'buildings.csv'), index=False,  float_format='%g')

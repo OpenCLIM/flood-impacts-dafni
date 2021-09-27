@@ -1,19 +1,21 @@
 kind: Model
-apiVersion: v1alpha4
+api_version: v1beta1
 metadata:
-  displayName: Flood Impacts (OpenCLIM)
-  type: Modelling
+  display_name: Flood Impacts (OpenCLIM)
+  publisher: Newcastle University
   name: flood-impacts
   summary: Assess flood impacts using OS MasterMap
   description: Calculates maximum depths, velocity depth products and flooded perimeters of flooded buildings
+  source_code: https://github.com/openclim/flood-impacts-dafni
 spec:
   inputs:
-    env:
+    parameters:
       - name: THRESHOLD
         title: Threshold depth (m)
-        desc: Depth to use when calculating flooded perimeter
+        description: Minimum water depth used to assign buildings as flooded
         type: number
         default: 0.3
+        required: true
         min: 0
         max: 1
 
@@ -21,26 +23,21 @@ spec:
       - name: MasterMap
         description: OS MasterMap buildings geopackage. Must contain a 'toid' attribute.
         default:
-          - uid: 1642d68f-f4ea-494d-b3fe-f27125f11757
-            versionUid: 8fadd93c-a8aa-41d2-8adb-5d615db89b3c
+          - 8fadd93c-a8aa-41d2-8adb-5d615db89b3c
         path: inputs/mastermap
         required: true
 
       - name: UPRN
         description: Lookup between TOID and UPRN identifiers (CSV)
         default:
-
-          - uid: d6f74a03-1983-43df-8232-d3172e38fecf
-            versionUid: 9c1fbe4d-c322-465d-9c9f-6d34da30e8a6
+          - 9c1fbe4d-c322-465d-9c9f-6d34da30e8a6
         path: inputs/uprn
         required: false
 
       - name: Depth/damage curves
         description: CSV files named residential.csv and nonresidential.csv relating depth (m) to damage (£/m2)
         default:
-          - uid: cd253bc2-0d72-4403-9fe2-34ada8fa628c
-            versionUid: d02980d6-a5d5-419f-a47f-dc9ae17517dd
-
+          - d02980d6-a5d5-419f-a47f-dc9ae17517dd
         path: inputs/dd-curves
         required: true
 
@@ -49,4 +46,4 @@ spec:
     datasets:
       - name: outputs/buildings.csv
         type: CSV
-        desc: Maximum depths & velocity depth products and flooded perimeters of flooded buildings
+        description: Maximum depths & velocity depth products and flooded perimeters of flooded buildings
