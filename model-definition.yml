@@ -37,7 +37,7 @@ spec:
       - name: Depth/damage curves
         description: CSV files named residential.csv and nonresidential.csv relating depth (m) to damage (£/m2)
         default:
-          - d02980d6-a5d5-419f-a47f-dc9ae17517dd
+          - d0701ef5-6f59-43c7-b161-a956b7dd361a
         path: inputs/dd-curves
         required: true
 
