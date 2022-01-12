@@ -94,11 +94,10 @@ with rio.open(os.path.join(inputs_path, 'run/max_depth.tif')) as max_depth,\
 
     # Lookup UPRN if available
     if len(uprn_lookup) > 0:
-        uprn = pd.read_csv(uprn_lookup[0], usecols=['IDENTIFIER_1', 'IDENTIFIER_2']).rename(
-            columns={'IDENTIFIER_1': 'uprn', 'IDENTIFIER_2': 'toid'})
-
-        buildings = buildings.merge(uprn)
-
+        uprn = pd.read_csv(uprn_lookup[0], usecols=['IDENTIFIER_1', 'IDENTIFIER_2'],
+                           dtype={'IDENTIFIER_1': str}).rename(columns={'IDENTIFIER_1': 'uprn',
+                                                                        'IDENTIFIER_2': 'toid'})
+        buildings = buildings.merge(uprn, how='left')
     # Save to CSV
     buildings[['toid', *['uprn' for _ in uprn_lookup[:1]], 'depth', 'damage', 'vd_product', 'flooded_perimeter']].to_csv(
         os.path.join(outputs_path, 'buildings.csv'), index=False,  float_format='%g')
